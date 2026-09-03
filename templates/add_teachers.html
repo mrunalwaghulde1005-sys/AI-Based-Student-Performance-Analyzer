@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Teachers - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <nav class="navbar glass-panel">
+        <div class="nav-brand"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="AI Analyzer Logo" class="logo-img"> Admin Dashboard</div>
+        <div class="nav-user">
+            <span>Welcome, {{ username }}</span>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">Back to Dashboard</a>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        <h2 class="section-title">Add Multiple Teachers</h2>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="form-card glass-panel">
+            <form id="teachersForm" action="{{ url_for('add_teachers') }}" method="POST">
+                <div id="teachersContainer">
+                    <div class="teacher-entry" style="border: 1px solid #444; padding: 1rem; margin-bottom: 1rem; border-radius: 8px;">
+                        <h4>Teacher 1</h4>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="username_0">Username</label>
+                                <input type="text" id="username_0" name="username_0" required placeholder="e.g. teacher1">
+                            </div>
+                            <div class="input-group">
+                                <label for="password_0">Password</label>
+                                <input type="password" id="password_0" name="password_0" required placeholder="e.g. pass123">
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="name_0">Full Name</label>
+                                <input type="text" id="name_0" name="name_0" required placeholder="e.g. Dr. Jane Smith">
+                            </div>
+                            <div class="input-group">
+                                <label for="department_0">Department</label>
+                                <input type="text" id="department_0" name="department_0" required placeholder="e.g. Computer Science">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="button" id="addTeacherBtn" class="btn btn-secondary">Add Another Teacher</button>
+                    <button type="submit" class="btn btn-primary">Save All Teachers</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let teacherCount = 1;
+
+        document.getElementById('addTeacherBtn').addEventListener('click', function() {
+            const container = document.getElementById('teachersContainer');
+            const newEntry = document.createElement('div');
+            newEntry.className = 'teacher-entry';
+            newEntry.style.cssText = 'border: 1px solid #444; padding: 1rem; margin-bottom: 1rem; border-radius: 8px;';
+            
+            newEntry.innerHTML = `
+                <h4>Teacher ${teacherCount + 1}</h4>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="username_${teacherCount}">Username</label>
+                        <input type="text" id="username_${teacherCount}" name="username_${teacherCount}" required placeholder="e.g. teacher${teacherCount + 1}">
+                    </div>
+                    <div class="input-group">
+                        <label for="password_${teacherCount}">Password</label>
+                        <input type="password" id="password_${teacherCount}" name="password_${teacherCount}" required placeholder="e.g. pass123">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="name_${teacherCount}">Full Name</label>
+                        <input type="text" id="name_${teacherCount}" name="name_${teacherCount}" required placeholder="e.g. Dr. Jane Smith">
+                    </div>
+                    <div class="input-group">
+                        <label for="department_${teacherCount}">Department</label>
+                        <input type="text" id="department_${teacherCount}" name="department_${teacherCount}" required placeholder="e.g. Computer Science">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-danger btn-sm remove-teacher" style="margin-top: 0.5rem;">Remove</button>
+            `;
+            
+            container.appendChild(newEntry);
+            teacherCount++;
+            
+            // Add remove functionality
+            newEntry.querySelector('.remove-teacher').addEventListener('click', function() {
+                container.removeChild(newEntry);
+                teacherCount--;
+                updateHeaders();
+            });
+        });
+
+        function updateHeaders() {
+            const entries = document.querySelectorAll('.teacher-entry');
+            entries.forEach((entry, index) => {
+                entry.querySelector('h4').textContent = `Teacher ${index + 1}`;
+            });
+        }
+
+        document.getElementById('teachersForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const teachers = [];
+            
+            for (let i = 0; i < teacherCount; i++) {
+                const username = formData.get(`username_${i}`);
+                const password = formData.get(`password_${i}`);
+                const name = formData.get(`name_${i}`);
+                const department = formData.get(`department_${i}`);
+                
+                if (username && password && name && department) {
+                    teachers.push({
+                        username: username,
+                        password: password,
+                        name: name,
+                        department: department
+                    });
+                }
+            }
+            
+            if (teachers.length === 0) {
+                alert('Please add at least one teacher.');
+                return;
+            }
+            
+            // Create hidden inputs for JSON data
+            teachers.forEach(teacher => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'teachers';
+                hiddenInput.value = JSON.stringify(teacher);
+                this.appendChild(hiddenInput);
+            });
+            
+            this.submit();
+        });
+    </script>
+</body>
+</html>

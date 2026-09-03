@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - AI Student Performance Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dark-theme">
+    <nav class="navbar glass-panel">
+        <div class="nav-brand"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="AI Analyzer Logo" class="logo-img"> AI Performance Analyzer</div>
+        <div class="nav-links">
+            <span class="welcome-text">Welcome, {{ username }}</span>
+            <a href="{{ url_for('dashboard') }}" class="nav-item active">Dashboard</a>
+            <a href="{{ url_for('add_student') }}" class="nav-item">Add Student</a>
+            <a href="{{ url_for('logout') }}" class="btn btn-danger btn-sm">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container dashboard-container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- AI Insights Section -->
+        <div class="insights-grid">
+            <div class="stat-card glass-panel highlight-good">
+                <h3>Top Performers (Excellent)</h3>
+                <div class="stat-content">
+                    <h2 class="stat-number">{{ top_students|length }}</h2>
+                    <p>Students</p>
+                </div>
+            </div>
+            <div class="stat-card glass-panel highlight-bad">
+                <h3>Needs Intervention</h3>
+                <div class="stat-content">
+                    <h2 class="stat-number">{{ weak_students|length }}</h2>
+                    <p>Students</p>
+                </div>
+            </div>
+            <div class="stat-card glass-panel">
+                <h3>Total Monitored</h3>
+                <div class="stat-content">
+                    <h2 class="stat-number">{{ students|length }}</h2>
+                    <p>Students</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-container glass-panel">
+                <h3>AI Performance Distribution</h3>
+                <div class="chart-wrapper">
+                    <canvas id="performancePieChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container glass-panel">
+                <h3>Top 5 Students by Marks</h3>
+                <div class="chart-wrapper">
+                    <canvas id="marksBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Data Table -->
+        <div class="table-container glass-panel mt-2">
+            <h3>Student Performance Records</h3>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Roll No.</th>
+                            <th>Name</th>
+                            <th>Attendance</th>
+                            <th>Marks</th>
+                            <th>Assignments</th>
+                            <th>AI Prediction</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>{{ student.roll_number }}</td>
+                            <td>{{ student.name }}</td>
+                            <td>{{ student.attendance_percent }}%</td>
+                            <td>{{ student.marks_percent }}%</td>
+                            <td>{{ student.assignments_score }}/100</td>
+                            <td>
+                                <span class="badge badge-{{ student.ai_prediction|lower|replace(' ', '-') }}">
+                                    {{ student.ai_prediction }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No student records found. Start by adding students!</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link to custom JS -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

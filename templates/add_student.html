@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Student - AI Performance Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <nav class="navbar glass-panel">
+        <div class="nav-brand"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="AI Analyzer Logo" class="logo-img"> AI Performance Analyzer</div>
+        <div class="nav-links">
+            <span class="welcome-text">Welcome, {{ username }}</span>
+            <a href="{{ url_for('dashboard') }}" class="nav-item">Dashboard</a>
+            <a href="{{ url_for('add_student') }}" class="nav-item active">Add Student</a>
+            <a href="{{ url_for('logout') }}" class="btn btn-danger btn-sm">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container flex-center main-form-wrapper">
+        <div class="form-card glass-panel">
+            <div class="form-header">
+                <h2>Add Student Record</h2>
+                <p class="subtitle">Enter the metrics below. Our AI algorithm will automatically analyze and predict performance based on weights.</p>
+            </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('add_student') }}" method="POST">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="name">Student Name</label>
+                        <input type="text" id="name" name="name" required placeholder="e.g. John Doe">
+                    </div>
+                    <div class="input-group">
+                        <label for="roll_number">Roll Number</label>
+                        <input type="text" id="roll_number" name="roll_number" required placeholder="e.g. CS101">
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="attendance_percent">Attendance Percentage (0-100)</label>
+                    <input type="number" id="attendance_percent" name="attendance_percent" min="0" max="100" step="0.01" required placeholder="e.g. 85">
+                </div>
+                
+                <div class="input-group">
+                    <label for="marks_percent">Marks Percentage (0-100)</label>
+                    <input type="number" id="marks_percent" name="marks_percent" min="0" max="100" step="0.01" required placeholder="e.g. 78.5">
+                </div>
+                
+                <div class="input-group">
+                    <label for="assignments_score">Assignments Score (0-100)</label>
+                    <input type="number" id="assignments_score" name="assignments_score" min="0" max="100" step="0.01" required placeholder="e.g. 90">
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100 mt-2">
+                    <span class="btn-icon">✨</span> Analyze & Save Student
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

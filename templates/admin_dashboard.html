@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dark-theme">
+    <nav class="navbar glass-panel">
+        <div class="nav-brand"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="AI Analyzer Logo" class="logo-img"> Admin Dashboard</div>
+        <div class="nav-user">
+            <span>Welcome, {{ username }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        <h2 class="section-title">System Overview</h2>
+        
+        <div class="stats-grid">
+            <div class="stat-card glass-panel">
+                <h3>Total Students</h3>
+                <div class="stat-value">{{ student_count }}</div>
+            </div>
+            <div class="stat-card glass-panel">
+                <h3>Total Teachers</h3>
+                <div class="stat-value">{{ teacher_count }}</div>
+            </div>
+            <div class="stat-card glass-panel">
+                <h3>Total Quizzes</h3>
+                <div class="stat-value">{{ quiz_count }}</div>
+            </div>
+        </div>
+
+        <div class="action-buttons" style="margin-top: 2rem; display: flex; gap: 1rem;">
+            <a href="{{ url_for('add_students') }}" class="btn btn-primary">Add Students</a>
+            <a href="{{ url_for('add_teachers') }}" class="btn btn-primary">Add Teachers</a>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">Performance Analytics</h2>
+        <div class="charts-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div class="chart-container glass-panel">
+                <h3>Student Attendance Distribution</h3>
+                <div class="chart-wrapper" style="height: 300px;">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container glass-panel">
+                <h3>Quiz Performance Trends</h3>
+                <div class="chart-wrapper" style="height: 300px;">
+                    <canvas id="quizPerformanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">Recent Registrations</h2>
+        <div class="table-container glass-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in recent_registrations %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.name }}</td>
+                        <td>
+                            <span class="badge badge-{% if user.role == 'student' %}primary{% else %}success{% endif %}">{{ user.role|title }}</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3">No recent registrations.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">Recent Quiz Attempts</h2>
+        <div class="table-container glass-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Quiz</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in recent_attempts %}
+                    <tr>
+                        <td>{{ attempt.username }}</td>
+                        <td>{{ attempt.title }}</td>
+                        <td>
+                            <span class="badge badge-primary">{{ attempt.score }} / {{ attempt.total_questions }}</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3">No quiz attempts yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">Recent Assignment Submissions</h2>
+        <div class="table-container glass-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Roll Number</th>
+                        <th>Title</th>
+                        <th>Score</th>
+                        <th>Remark</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in recent_assignments %}
+                    <tr>
+                        <td>{{ sub.student_name }}</td>
+                        <td>{{ sub.roll_number }}</td>
+                        <td>{{ sub.title }}</td>
+                        <td>{{ sub.score if sub.score is not none else 'Pending' }}</td>
+                        <td>{{ sub.remark or 'Not reviewed yet' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5">No assignment submissions yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize charts with data passed from Flask
+            initAttendanceChart({{ attendance_data|tojson }});
+            initQuizPerformanceChart({{ quiz_performance_data|tojson }});
+        });
+
+        function initAttendanceChart(data) {
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            
+            if (data.labels.length === 0) {
+                // Show placeholder when no data
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['No Data'],
+                        datasets: [{
+                            label: 'Attendance Percentage',
+                            data: [0],
+                            backgroundColor: 'rgba(156, 163, 175, 0.8)',
+                            borderColor: 'rgba(156, 163, 175, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Attendance Percentage',
+                        data: data.values,
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function initQuizPerformanceChart(data) {
+            const ctx = document.getElementById('quizPerformanceChart').getContext('2d');
+            
+            if (data.labels.length === 0) {
+                // Show placeholder when no data
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['No Data'],
+                        datasets: [{
+                            label: 'Average Score',
+                            data: [0],
+                            borderColor: 'rgba(156, 163, 175, 1)',
+                            backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+
+            const useBarChart = data.labels.length === 1;
+            
+            new Chart(ctx, {
+                type: useBarChart ? 'bar' : 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Average Score',
+                        data: data.values,
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        backgroundColor: useBarChart ? 'rgba(59, 130, 246, 0.85)' : 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: useBarChart ? 1 : 2,
+                        pointRadius: useBarChart ? 0 : 5,
+                        pointHoverRadius: useBarChart ? 0 : 7,
+                        tension: 0.4,
+                        fill: !useBarChart,
+                        maxBarThickness: 80
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Average Score: ' + context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

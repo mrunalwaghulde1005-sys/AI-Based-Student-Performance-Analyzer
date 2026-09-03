@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="logoTitle logoDesc">
+  <title id="logoTitle">AI Analyzer Logo</title>
+  <desc id="logoDesc">An open book with green leaves, orange pages, and a blue graduation cap.</desc>
+
+  <path fill="#24456f" d="M80 22 62 32l18 10 18-10-18-10z" />
+  <path fill="#24456f" d="m96 32 8 4-8 4v-8z" />
+  <path fill="#44a6dc" d="M69 41c0-6.1 4.9-11 11-11s11 4.9 11 11-4.9 11-11 11-11-4.9-11-11z" />
+  <path fill="#44a6dc" d="M76 50h8v43h-8z" />
+
+  <path fill="#f1aa22" d="M80 85C70 61 54 47 35 39c17 14 28 31 45 46z" />
+  <path fill="#f1aa22" d="M80 85c10-24 26-38 45-46-17 14-28 31-45 46z" />
+  <path fill="#f4bf2f" d="M80 85C71 69 59 58 44 52c13 11 22 24 36 33z" />
+  <path fill="#f4bf2f" d="M80 85c9-16 21-27 36-33-13 11-22 24-36 33z" />
+
+  <path fill="none" stroke="#4b9f45" stroke-linecap="round" stroke-width="7" d="M39 63c-11 10-15 28-7 44" />
+  <path fill="none" stroke="#4b9f45" stroke-linecap="round" stroke-width="7" d="M121 63c11 10 15 28 7 44" />
+  <path fill="none" stroke="#4b9f45" stroke-linecap="round" stroke-width="6" d="M47 57c-16 19-12 41 26 69" />
+  <path fill="none" stroke="#4b9f45" stroke-linecap="round" stroke-width="6" d="M113 57c16 19 12 41-26 69" />
+
+  <path fill="#24456f" d="M80 135C59 113 38 101 18 96c22 14 41 29 62 47 21-18 40-33 62-47-20 5-41 17-62 39z" />
+  <path fill="#2d5d8d" d="M80 129C58 108 35 94 13 88c25 4 48 13 67 31 19-18 42-27 67-31-22 6-45 20-67 41z" />
+  <path fill="#2d5d8d" d="M80 119C61 96 43 83 23 78c20 15 38 30 57 53 19-23 37-38 57-53-20 5-38 18-57 41z" />
+  <path fill="#ffffff" d="M80 119C61 103 42 96 23 95c21 9 38 20 57 37 19-17 36-28 57-37-19 1-38 8-57 24z" />
+</svg>

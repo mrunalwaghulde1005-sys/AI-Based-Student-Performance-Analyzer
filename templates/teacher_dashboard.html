@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>teacher Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <nav class="navbar glass-panel">
+        <div class="nav-brand"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="AI Analyzer Logo" class="logo-img"> Teacher Dashboard</div>
+        <div class="nav-user">
+            <span>Welcome, {{ username }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="stats-grid">
+            <div class="glass-panel" style="grid-column: span 3; padding: 2rem; margin-bottom: 1.5rem;">
+                <h3>teacher Account Details</h3>
+                <div class="form-grid" style="margin-top: 1rem;">
+                    <div class="input-group">
+                        <label for="teacher_username">Username</label>
+                        <input type="text" id="teacher_username" name="username" value="{{ username }}" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label for="teacher_password">Password</label>
+                        <input type="password" id="teacher_password" name="password" placeholder="Enter password">
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel" style="grid-column: span 3; padding: 2rem;">
+                <h3>Upload New Study Material</h3>
+                <form action="{{ url_for('upload_note') }}" method="POST" enctype="multipart/form-data" class="add-student-form" style="margin-top: 1rem;">
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Title</label>
+                            <input type="text" name="title" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Subject</label>
+                            <input type="text" name="subject" required>
+                        </div>
+                        <div class="input-group">
+                            <label>PDF File</label>
+                            <input type="file" name="file" accept=".pdf" required style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 8px; width: 100%; color: white;">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Upload Material</button>
+                </form>
+            </div>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">My Uploaded Materials</h2>
+        <div class="table-container glass-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Subject</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for note in notes %}
+                    <tr>
+                        <td>{{ note.title }}</td>
+                        <td>{{ note.subject }}</td>
+                        <td>{{ note.upload_date.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <form action="{{ url_for('generate_quiz', note_id=note.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Generate AI Quiz</button>
+                            </form>
+                            <a href="{{ url_for('download_note', filename=note.file_path) }}" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">View</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">No materials uploaded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">Assignment Submissions</h2>
+        <div class="table-container glass-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Student</th>
+                        <th>Roll Number</th>
+                        <th>Submitted At</th>
+                        <th>Score</th>
+                        <th>Remark</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in assignment_submissions %}
+                    <tr>
+                        <td>{{ sub.title }}</td>
+                        <td>{{ sub.student_name or sub.student_username or 'Unknown' }}</td>
+                        <td>{{ sub.roll_number or 'Unknown' }}</td>
+                        <td>{{ sub.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ sub.score if sub.score is not none else 'Pending' }}</td>
+                        <td>{{ sub.remark or 'Not reviewed yet' }}</td>
+                        <td>
+                            <form action="{{ url_for('assignment_remark', submission_id=sub.id) }}" method="POST" style="display:grid; gap:0.5rem;">
+                                <input type="text" name="score" placeholder="Score" value="{{ sub.score if sub.score is not none else '' }}" style="width: 100px; padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">
+                                <textarea name="remark" placeholder="Add remark" style="min-height: 60px; padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white;">{{ sub.remark or '' }}</textarea>
+                                <button type="submit" class="btn btn-primary" style="padding: 8px 10px; font-size: 0.8rem;">Save</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7">No assignment submissions found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">Search Attendance by Roll Number</h2>
+        <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
+            <form action="{{ url_for('teacher_dashboard') }}" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+                <div class="input-group" style="flex: 1; min-width: 260px; margin-bottom: 0;">
+                    <label for="search_roll">Roll Number</label>
+                    <input type="text" id="search_roll" name="search_roll" value="{{ search_roll or '' }}" placeholder="Enter student roll number" style="width: 100%;">
+                </div>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        {% if attendance_search_student %}
+        <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
+            <h3>Attendance for {{ attendance_search_student.name }} ({{ attendance_search_student.roll_number }})</h3>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in attendance_search_results %}
+                        <tr>
+                            <td>{{ record.attendance_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ record.status|title }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2">No attendance records found for this student.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <h2 class="section-title" style="margin-top: 2rem;">Mark Attendance ({{ today.strftime('%Y-%m-%d') }})</h2>
+        <div class="table-container glass-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Quiz Title</th>
+                        <th>Created Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quiz in quizzes %}
+                    <tr>
+                        <td>{{ quiz.title }}</td>
+                        <td>{{ quiz.created_at.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="2">No quizzes generated yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">Mark Attendance ({{ today.strftime('%Y-%m-%d') }})</h2>
+        <div class="table-container glass-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Attendance Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.roll_number }}</td>
+                        <td>{{ student.name }}</td>
+                        <td>
+                            {% set current_status = attendance_records.get(student.id, 'absent') %}
+                            <span class="badge badge-{% if current_status == 'present' %}success{% elif current_status == 'leave' %}warning{% else %}danger{% endif %}">
+                                {{ current_status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <form action="{{ url_for('mark_attendance') }}" method="POST" style="display:inline; display:flex; gap:0.5rem; align-items:center;">
+                                <input type="hidden" name="student_id" value="{{ student.id }}">
+                                <select name="status" style="background: rgba(59, 130, 246, 0.3); color: white; border: 1px solid rgba(59, 130, 246, 0.5); padding: 6px 10px; border-radius: 4px; font-size: 0.85rem; min-width: 100px; cursor: pointer;">
+                                    <option value="present" style="background: #0f172a; color: white;" {% if attendance_records.get(student.id, 'absent') == 'present' %}selected{% endif %}>Present</option>
+                                    <option value="absent" style="background: #0f172a; color: white;" {% if attendance_records.get(student.id, 'absent') == 'absent' %}selected{% endif %}>Absent</option>
+                                    <option value="leave" style="background: #0f172a; color: white;" {% if attendance_records.get(student.id, 'absent') == 'leave' %}selected{% endif %}>Leave</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary" style="padding: 6px 15px; font-size: 0.85rem; margin:0;">Save</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">No students available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">View/Edit Past Attendance Records</h2>
+        <div class="glass-panel" style="padding: 2rem; margin-bottom: 1.5rem;">
+            <form action="{{ url_for('view_attendance') }}" method="GET" style="display: flex; gap: 1rem; align-items: end;">
+                <div class="input-group" style="margin: 0;">
+                    <label for="attendance_date">Select Date</label>
+                    <input type="date" id="attendance_date" name="date" value="{{ (selected_date.strftime('%Y-%m-%d') if selected_date else today.strftime('%Y-%m-%d')) }}" required style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(59, 130, 246, 0.5); padding: 8px; border-radius: 8px;">
+                </div>
+                <button type="submit" class="btn btn-primary">View Attendance</button>
+            </form>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">Attendance Records by Date Range</h2>
+        <div class="glass-panel" style="padding: 2rem; margin-bottom: 1.5rem;">
+            <form action="{{ url_for('view_attendance') }}" method="GET" style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
+                <div class="input-group" style="margin: 0;">
+                    <label for="start_date">From Date</label>
+                    <input type="date" id="start_date" name="start_date" value="{{ (range_start_date.strftime('%Y-%m-%d') if range_start_date else today.strftime('%Y-%m-%d')) }}" required style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(59, 130, 246, 0.5); padding: 8px; border-radius: 8px;">
+                </div>
+                <div class="input-group" style="margin: 0;">
+                    <label for="end_date">To Date</label>
+                    <input type="date" id="end_date" name="end_date" value="{{ (range_end_date.strftime('%Y-%m-%d') if range_end_date else today.strftime('%Y-%m-%d')) }}" required style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(59, 130, 246, 0.5); padding: 8px; border-radius: 8px;">
+                </div>
+                <button type="submit" class="btn btn-primary">View Records</button>
+            </form>
+        </div>
+
+        {% if range_start_date and range_end_date %}
+        <h3>Attendance from {{ range_start_date.strftime('%Y-%m-%d') }} to {{ range_end_date.strftime('%Y-%m-%d') }}</h3>
+        <div class="table-container glass-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Attendance Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in range_attendance_records %}
+                    <tr>
+                        <td>{{ record.attendance_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ record.roll_number }}</td>
+                        <td>{{ record.name }}</td>
+                        <td>
+                            <span class="badge badge-{% if record.status == 'present' %}success{% elif record.status == 'leave' %}warning{% else %}danger{% endif %}">
+                                {{ record.status|title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">No attendance records found for this date range.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if selected_date %}
+        <h3>Attendance for {{ selected_date.strftime('%Y-%m-%d') if selected_date else '' }}</h3>
+        <div class="table-container glass-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Attendance Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.roll_number }}</td>
+                        <td>{{ student.name }}</td>
+                        <td>
+                            {% set current_status = past_attendance_records.get(student.id, 'absent') %}
+                            <span class="badge badge-{% if current_status == 'present' %}success{% elif current_status == 'leave' %}warning{% else %}danger{% endif %}">
+                                {{ current_status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <form action="{{ url_for('mark_attendance_date') }}" method="POST" style="display:inline; display:flex; gap:0.5rem; align-items:center;">
+                                <input type="hidden" name="student_id" value="{{ student.id }}">
+                                <input type="hidden" name="attendance_date" value="{{ selected_date.strftime('%Y-%m-%d') }}">
+                                <select name="status" style="background: rgba(59, 130, 246, 0.3); color: white; border: 1px solid rgba(59, 130, 246, 0.5); padding: 6px 10px; border-radius: 4px; font-size: 0.85rem; min-width: 100px; cursor: pointer;">
+                                    <option value="present" style="background: #0f172a; color: white;" {% if past_attendance_records.get(student.id, 'absent') == 'present' %}selected{% endif %}>Present</option>
+                                    <option value="absent" style="background: #0f172a; color: white;" {% if past_attendance_records.get(student.id, 'absent') == 'absent' %}selected{% endif %}>Absent</option>
+                                    <option value="leave" style="background: #0f172a; color: white;" {% if past_attendance_records.get(student.id, 'absent') == 'leave' %}selected{% endif %}>Leave</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary" style="padding: 6px 15px; font-size: 0.85rem; margin:0;">Save</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">No students available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

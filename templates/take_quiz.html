@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <nav class="navbar glass-panel">
+        <div class="nav-brand"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="AI Analyzer Logo" class="logo-img"> Quiz: {{ quiz.title }}</div>
+        <div class="nav-user">
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container main-content" style="max-width: 800px;">
+        <div class="glass-panel" style="padding: 2rem;">
+            <form action="{{ url_for('submit_quiz', quiz_id=quiz.id) }}" method="POST">
+                {% for q in questions %}
+                <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <p style="font-size: 1.1rem; margin-bottom: 1rem;"><strong>{{ loop.index }}.</strong> {{ q.question_text }}</p>
+                    
+                    <div style="margin-bottom: 0.5rem;">
+                        <input type="radio" id="q{{ q.id }}_A" name="question_{{ q.id }}" value="A" required>
+                        <label for="q{{ q.id }}_A">A) {{ q.option_a }}</label>
+                    </div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <input type="radio" id="q{{ q.id }}_B" name="question_{{ q.id }}" value="B">
+                        <label for="q{{ q.id }}_B">B) {{ q.option_b }}</label>
+                    </div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <input type="radio" id="q{{ q.id }}_C" name="question_{{ q.id }}" value="C">
+                        <label for="q{{ q.id }}_C">C) {{ q.option_c }}</label>
+                    </div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <input type="radio" id="q{{ q.id }}_D" name="question_{{ q.id }}" value="D">
+                        <label for="q{{ q.id }}_D">D) {{ q.option_d }}</label>
+                    </div>
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary w-100" style="padding: 15px; font-size: 1.1rem;">Submit Quiz</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

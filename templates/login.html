@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AI Student Performance Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme flex-center">
+    <div class="login-container glass-panel">
+        <div class="login-header">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="AI Analyzer Logo" class="logo-img">
+            <h1>AI Student Performance Analyzer</h1>
+            <p>Login to Dashboard</p>
+        </div>
+        
+        <!-- Flask Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('login') }}" method="POST" class="login-form">
+            <div class="input-group">
+                <label for="role">Role</label>
+                <select id="role" name="role" required class="form-control" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; width: 100%;">
+                    <option value="student" style="color: black;">Student</option>
+                    <option value="teacher" style="color: black;">Teacher</option>
+                    <option value="admin" style="color: black;">Admin</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required placeholder="Enter username">
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Enter password">
+            </div>
+            <!-- <p style="font-size: 12px; color: #aaa;">Default Users: admin/admin123, teacher1/teacher123, student1/student123</p> -->
+            <button type="submit" class="btn btn-primary w-100">Sign In</button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+            <p style="color: var(--text-muted); margin-bottom: 1rem;">Don't have an account?</p>
+            <a href="{{ url_for('register') }}" class="btn btn-outline">Register as Student or Teacher</a>
+        </div>
+    </div>
+</body>
+</html>

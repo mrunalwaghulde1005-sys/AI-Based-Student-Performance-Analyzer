@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dark-theme">
+    <nav class="navbar glass-panel">
+        <div class="nav-brand"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="AI Analyzer Logo" class="logo-img"> Student Dashboard</div>
+        <div class="nav-user">
+            <span>Welcome, {{ username }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h2 class="section-title">Study Materials</h2>
+        <div class="table-container glass-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Subject</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for note in notes %}
+                    <tr>
+                        <td>{{ note.title }}</td>
+                        <td><span class="badge badge-primary">{{ note.subject }}</span></td>
+                        <td>
+                            <a href="{{ url_for('download_note', filename=note.file_path) }}" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Download PDF</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3">No materials available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">Available Quizzes</h2>
+        <div class="table-container glass-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Quiz Title</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quiz in quizzes %}
+                    <tr>
+                        <td>{{ quiz.title }}</td>
+                        <td>
+                            <a href="{{ url_for('take_quiz', quiz_id=quiz.id) }}" class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">Take Quiz</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="2">No quizzes available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">Upload Assignment</h2>
+        <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
+            <form action="{{ url_for('upload_assignment') }}" method="POST" enctype="multipart/form-data" style="display: grid; gap: 1rem;">
+                <div class="input-group">
+                    <label for="assignment_title">Assignment Title</label>
+                    <input type="text" id="assignment_title" name="title" required placeholder="Enter assignment title">
+                </div>
+                <div class="input-group">
+                    <label for="assignment_roll_number">Roll No.</label>
+                    <input type="text" id="assignment_roll_number" name="roll_number" required placeholder="Enter roll number" value="{{ student_profile.roll_number if student_profile else '' }}">
+                </div>
+                <div class="input-group">
+                    <label for="assignment_file">Assignment File</label>
+                    <input type="file" id="assignment_file" name="file" accept=".pdf,.doc,.docx,.txt" required style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 8px; width: 100%; color: white;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: fit-content;">Upload Assignment</button>
+            </form>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">My Assignment Submissions</h2>
+        <div class="table-container glass-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Roll No.</th>
+                        <th>Submitted At</th>
+                        <th>Score</th>
+                        <th>Remark</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in assignment_submissions %}
+                    <tr>
+                        <td>{{ sub.title }}</td>
+                        <td>{{ sub.roll_number or 'N/A' }}</td>
+                        <td>{{ sub.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ sub.score if sub.score is not none else 'Pending' }}</td>
+                        <td>{{ sub.remark or 'Not reviewed yet' }}</td>
+                        <td>
+                            <a href="{{ url_for('download_assignment', filename=sub.file_path) }}" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">Download</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6">No assignment submissions yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 2rem;">My Performance & AI Analysis</h2>
+        <div class="charts-grid">
+            <div class="chart-container glass-panel">
+                <h3>Quiz Performance Trend</h3>
+                <div class="chart-wrapper">
+                    <canvas id="studentPerformanceChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container glass-panel">
+                <h3>Score by Quiz</h3>
+                <div class="chart-wrapper">
+                    <canvas id="studentScoreChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns: 1fr;">
+            {% for attempt in attempts %}
+            <div class="stat-card glass-panel" style="text-align: left;">
+                <h3 style="color: #64ffda;">{{ attempt.quiz_title }}</h3>
+                <p><strong>Score:</strong> {{ attempt.score }} / {{ attempt.total_questions }}</p>
+                <div style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    <p style="color: #ccd6f6; font-size: 0.9rem;"><strong>🤖 AI Insights:</strong><br>{{ attempt.ai_analysis }}</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="stat-card glass-panel" style="text-align: left;">
+                <p>No attempts yet. Take a quiz to get AI feedback on your performance!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/student/quiz_performance_data')
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('Unable to load quiz performance data');
+                    }
+                    return response.json();
+                })
+                .then(function(quizPerformanceData) {
+                    initStudentPerformanceChart(quizPerformanceData);
+                    initStudentScoreChart(quizPerformanceData);
+                })
+                .catch(function(error) {
+                    console.error(error);
+                    const emptyData = { labels: [], percentages: [], scores: [], totals: [] };
+                    initStudentPerformanceChart(emptyData);
+                    initStudentScoreChart(emptyData);
+                });
+        });
+
+        function emptyChartData(label) {
+            return {
+                labels: ['No attempts yet'],
+                values: [0],
+                label: label
+            };
+        }
+
+        function initStudentPerformanceChart(data) {
+            const ctx = document.getElementById('studentPerformanceChart').getContext('2d');
+            data = data || { labels: [], percentages: [], scores: [], totals: [] };
+            const hasData = data.labels.length > 0;
+            const chartData = hasData ? data : emptyChartData('Score Percentage');
+            const useBarChart = hasData && data.labels.length === 1;
+
+            new Chart(ctx, {
+                type: useBarChart ? 'bar' : 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: chartData.label || 'Score Percentage',
+                        data: hasData ? data.percentages : chartData.values,
+                        borderColor: 'rgba(100, 255, 218, 1)',
+                        backgroundColor: useBarChart ? 'rgba(100, 255, 218, 0.85)' : 'rgba(100, 255, 218, 0.12)',
+                        borderWidth: useBarChart ? 1 : 2,
+                        pointBackgroundColor: 'rgba(100, 255, 218, 1)',
+                        pointBorderColor: '#0f172a',
+                        pointRadius: useBarChart ? 0 : 5,
+                        tension: 0.35,
+                        fill: !useBarChart,
+                        maxBarThickness: 80
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Score: ' + context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initStudentScoreChart(data) {
+            const ctx = document.getElementById('studentScoreChart').getContext('2d');
+            data = data || { labels: [], percentages: [], scores: [], totals: [] };
+            const hasData = data.labels.length > 0;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: hasData ? data.labels : ['No attempts yet'],
+                    datasets: [
+                        {
+                            label: 'Score',
+                            data: hasData ? data.scores : [0],
+                            backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Total Questions',
+                            data: hasData ? data.totals : [0],
+                            backgroundColor: 'rgba(148, 163, 184, 0.45)',
+                            borderColor: 'rgba(148, 163, 184, 0.9)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - AI Student Performance Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme flex-center">
+    <div class="login-container glass-panel" style="max-width: 500px;">
+        <div class="login-header">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="AI Analyzer Logo" class="logo-img">
+            <h1>Register Account</h1>
+            <p>Create your account to get started</p>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('register') }}" method="POST" class="login-form" id="registerForm">
+            <div class="input-group">
+                <label for="role">Role</label>
+                <select id="role" name="role" required class="form-control" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; width: 100%;">
+                    <option value="" style="color: black;">Select Role</option>
+                    <option value="student" style="color: black;">Student</option>
+                    <option value="teacher" style="color: black;">Teacher</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required placeholder="Choose a username">
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Create a password">
+            </div>
+            
+            <div class="input-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required placeholder="Enter your full name">
+            </div>
+            
+            <!-- Student specific fields -->
+            <div id="studentFields" style="display: none;">
+                <div class="input-group">
+                    <label for="roll_number">Roll Number</label>
+                    <input type="text" id="roll_number" name="roll_number" placeholder="e.g. CS101">
+                </div>
+            </div>
+            
+            <!-- Teacher specific fields -->
+            <div id="teacherFields" style="display: none;">
+                <div class="input-group">
+                    <label for="department">Department</label>
+                    <input type="text" id="department" name="department" placeholder="e.g. Computer Science">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100">Create Account</button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+            <p style="color: var(--text-muted); margin-bottom: 1rem;">Already have an account?</p>
+            <a href="{{ url_for('index') }}" class="btn btn-outline">Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('role').addEventListener('change', function() {
+            const role = this.value;
+            const studentFields = document.getElementById('studentFields');
+            const teacherFields = document.getElementById('teacherFields');
+            
+            // Hide all role-specific fields first
+            studentFields.style.display = 'none';
+            teacherFields.style.display = 'none';
+            
+            // Show relevant fields and make them required
+            if (role === 'student') {
+                studentFields.style.display = 'block';
+                document.getElementById('roll_number').required = true;
+                document.getElementById('department').required = false;
+            } else if (role === 'teacher') {
+                teacherFields.style.display = 'block';
+                document.getElementById('department').required = true;
+                document.getElementById('roll_number').required = false;
+            } else {
+                document.getElementById('roll_number').required = false;
+                document.getElementById('department').required = false;
+            }
+        });
+    </script>
+</body>
+</html>
