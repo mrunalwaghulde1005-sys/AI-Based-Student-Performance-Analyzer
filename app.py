@@ -1,50 +1,65 @@
 import os
 import json
-import fitz  #pyMuPDF
-try:
-    import google.generativeai as genai
-    AI_AVAILABLE = True
-except Exception as e:
-    AI_AVAILABLE = False
-    print(f"Warning: Google Generative AI not available ({e}). AI features will be disabled.")
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash, send_from_directory
+import re
+import random
+
+import fitz
 import mysql.connector
+from flask import (
+    Flask, render_template, request, redirect, url_for,
+    session, jsonify, flash, send_from_directory
+)
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY")
+try:
+    from google import genai
 
-UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads', 'notes')
-ASSIGNMENT_FOLDER = os.path.join(app.root_path, 'static', 'uploads', 'assignments')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['ASSIGNMENT_FOLDER'] = ASSIGNMENT_FOLDER
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    if not GEMINI_API_KEY:
+        raise RuntimeError("GEMINI_API_KEY is missing")
+
+    gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+    AI_AVAILABLE = True
+except Exception as error:
+    gemini_client = None
+    AI_AVAILABLE = False
+    print(f"Warning: Gemini disabled: {error}")
+
+app = Flask(__name__)
+app.secret_key = os.getenv(
+    "FLASK_SECRET_KEY",
+    "super_secret_key_for_this_mini_project"
+)
+
+UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads", "notes")
+ASSIGNMENT_FOLDER = os.path.join(
+    app.root_path, "static", "uploads", "assignments"
+)
+
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["ASSIGNMENT_FOLDER"] = ASSIGNMENT_FOLDER
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(ASSIGNMENT_FOLDER, exist_ok=True)
 
-# Configure Gemini
-if AI_AVAILABLE:
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY", "dummy_key"))
-else:
-    print("AI features disabled - no API key configured")
-
 DB_CONFIG = {
-    'host': os.getenv("DB_HOST", "localhost"),
-    'user': os.getenv("DB_USER", "root"),
-    'password': os.getenv("DB_PASSWORD"),
-    'database': os.getenv("DB_NAME", "student_performance_db")
+    "host": "localhost",
+    "user": "root",
+    "password": "admin123",
+    "database": "student_performance_db",
 }
 
 
 def get_db_connection():
     try:
-        connection = mysql.connector.connect(**DB_CONFIG)
-        return connection
-    except mysql.connector.Error as err:
-        print(f"Error connecting to MySQL: {err}")
+        return mysql.connector.connect(**DB_CONFIG)
+    except mysql.connector.Error as error:
+        print(f"Error connecting to MySQL: {error}")
         return None
+
 
 def initialize_schema():
     conn = get_db_connection()
