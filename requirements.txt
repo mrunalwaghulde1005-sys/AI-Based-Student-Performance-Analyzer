@@ -4,3 +4,4 @@ google-generativeai
 protobuf>=4.23.0
 PyMuPDF
 python-dotenv
+gunicorn
